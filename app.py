@@ -5,7 +5,7 @@ import numpy as np
 
 # --- 1. Load the Model ---
 # Make sure the filename matches EXACTLY what you downloaded
-model = joblib.load('model_assets.joblib')
+model = joblib.load('model_assets.pkl')
 
 st.set_page_config(page_title="Fraud Detector", page_icon="🛡️")
 st.title("🛡️ Credit Card Fraud Detection")
