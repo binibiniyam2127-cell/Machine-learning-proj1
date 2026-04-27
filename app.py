@@ -11,8 +11,10 @@ model_path = os.path.join(base_path, 'xgboost_model.pkl')
 
 try:
     model = joblib.load(model_path)
-    # These are the exact names from your error message
+    # This list is updated to include the 5 missing base features 
+    # and placed in the order the error message specified.
     expected_cols = [
+        'Timestamp', 'Amount', 'Old_Balance', 'New_Balance', 'Is_International',
         'Hour', 'Balance_Error', 'Transaction_Type_CASH_OUT', 
         'Transaction_Type_DEBIT', 'Transaction_Type_PAYMENT', 
         'Transaction_Type_TRANSFER', 'Region_East', 'Region_North', 
@@ -36,29 +38,29 @@ with col2:
     trans_type = st.selectbox("Type", ['PAYMENT', 'DEBIT', 'CASH_IN', 'TRANSFER', 'CASH_OUT'])
     region = st.selectbox("Region", ['North', 'South', 'East', 'West', 'Central'])
     device = st.selectbox("Device", ['Desktop', 'Tablet', 'Mobile'])
+    is_intl = st.selectbox("International?", ["No", "Yes"])
 
-# --- 3. Preprocessing (Matching the Model's Training) ---
+# --- 3. Preprocessing ---
 if st.button("Analyze Transaction"):
-    # Create a base dataframe
-    data = pd.DataFrame([[timestamp, amount, old_balance, new_balance]], 
-                        columns=['Timestamp', 'Amount', 'Old_Balance', 'New_Balance'])
+    # Create the initial DataFrame with the base features
+    intl_val = 1 if is_intl == "Yes" else 0
+    data = pd.DataFrame([[timestamp, amount, old_balance, new_balance, intl_val]], 
+                        columns=['Timestamp', 'Amount', 'Old_Balance', 'New_Balance', 'Is_International'])
     
     # Feature Engineering
-    # 1. Hour (assuming timestamp is in hours or needs to be scaled)
     data['Hour'] = timestamp % 24 
-    # 2. Balance Error (Common fraud feature: expected vs actual balance)
     data['Balance_Error'] = new_balance - (old_balance - amount)
     
-    # 3. One-Hot Encoding (Manual creation to match the expected names)
+    # One-Hot Encoding
     data['Transaction_Type_' + trans_type] = 1
     data['Region_' + region] = 1
     data['Device_Type_' + device] = 1
     
-    # 4. Final Alignment
-    # This creates all missing columns (like Region_South if you picked North) and sets them to 0
+    # Final Alignment: Reindex adds missing columns as 0 and fixes the order
     final_df = data.reindex(columns=expected_cols, fill_value=0)
     
     try:
+        # XGBoost prediction
         prediction = model.predict(final_df)
         
         if prediction[0] == 1:
@@ -68,4 +70,3 @@ if st.button("Analyze Transaction"):
             
     except Exception as e:
         st.error(f"Prediction Error: {e}")
-        st.write("Current Input Shape:", final_df.columns.tolist())
