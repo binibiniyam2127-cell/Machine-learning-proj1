@@ -14,7 +14,7 @@ try:
 except Exception as e:
     st.error(f"Could not load model: {e}")
 
-st.title("🛡️ Fraud Detection System (Raw Data Version)")
+st.title("🛡️ Fraud Detection System ")
 st.write("Enter the transaction details as they appear in the raw dataset.")
 
 # --- 2. Input Fields (Matching your CSV columns) ---
