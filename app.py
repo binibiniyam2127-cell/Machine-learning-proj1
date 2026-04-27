@@ -1,31 +1,31 @@
 import streamlit as st
 import joblib
+import os
 import pandas as pd
 import numpy as np
+import xgboost as xgb
 
-# --- 1. Load the Model ---
-# Using the exact name you provided
+# --- 1. SMART FILENAME SETTING ---
+# This part handles the folder path automatically
+base_path = os.path.dirname(__file__)
+model_path = os.path.join(base_path, 'xgboost_model.pkl')
+
 try:
-    model = joblib.load('xgboost_model.pkl')
+    model = joblib.load(model_path)
 except Exception as e:
-    st.error(f"Error loading model: {e}")
+    st.error(f"Model file not found at {model_path}. Error: {e}")
 
+# --- 2. THE APP INTERFACE ---
 st.set_page_config(page_title="Fraud Detector", page_icon="🛡️")
 st.title("🛡️ Credit Card Fraud Detection")
-st.write("Enter transaction details below to check for fraudulent activity.")
 
-# --- 2. Input Fields ---
-# Note: Ensure these features match exactly what your model was trained on
-st.subheader("Transaction Details")
 v1 = st.number_input("Feature V1", value=0.0)
 v2 = st.number_input("Feature V2", value=0.0)
 amount = st.number_input("Transaction Amount ($)", min_value=0.0, value=10.0)
 
-# --- 3. Prediction Logic ---
 if st.button("Run Fraud Analysis"):
-    # Create the input array (adjust this if your model needs more features)
+    # Ensure this array matches the number of features your model expects
     input_data = np.array([[v1, v2, amount]]) 
-    
     prediction = model.predict(input_data)
     
     if prediction[0] == 1:
